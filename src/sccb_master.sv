@@ -43,7 +43,9 @@ module sccb_master
         SEND_SUB_ADDR,
         RCV_RD_DATA,
         SEND_DATA,
-        BIT_9, 
+        BIT_9_PHASE1,
+        BIT_9_PHASE2,
+        BIT_9_PHASE3, 
         STOP,
         STOP_WAIT
     } state_t;
@@ -83,10 +85,12 @@ module sccb_master
                 cnt <= 0;
             end
             if(cnt == CNT_HALF_SCL_CLK) begin
+                cnt <= cnt + 1;
                 scl_clk_rise_flag <= ~scl_clk_rise_flag;
             end
-            if(cnt == CNT_SCL_CLK) begin
+            else if(cnt == CNT_SCL_CLK) begin
                 cnt <= 0;
+                scl_clk_rise_flag <= ~scl_clk_rise_flag;
             end
             else begin
                 cnt <= cnt + 1;
@@ -114,10 +118,10 @@ module sccb_master
             end
             SEND_ID_ADDR: begin
                 if(bit_sent_cnt == 3'd7) begin
-                    next_state = BIT_9;
+                    next_state = BIT_9_PHASE1;
                 end
             end
-            BIT_9: begin
+            BIT_9_PHASE1: begin
                 if(cnt == CNT_SCL_CLK) begin
                     if(mode_reg == W_3_PHASE || mode_reg == W_2_PHASE) begin
                         next_state = SEND_SUB_ADDR;
@@ -128,13 +132,22 @@ module sccb_master
                 end
             end
             SEND_SUB_ADDR: begin
+
             end
             RCV_RD_DATA: begin
+                
+            end
+            BIT_9_PHASE2: begin
+            end
+            SEND_DATA: begin
+                
+            end
+            BIT_9_PHASE3: begin
             end
             default: next_state = IDLE;
         endcase
     end
-
+    
     //output logic
     always_ff @(posedge clk or negedge arstn) begin
         if(~arstn) begin
@@ -170,13 +183,33 @@ module sccb_master
                     o_scl <= (scl_clk_rise_flag) ? 1'b1 : 1'b0;
                     bit_sent_cnt <= bit_sent_cnt + 1;
                 end
-                BIT_9: begin
+                BIT_9_PHASE1: begin
                     o_scl <= (scl_clk_rise_flag) ? 1'b1 : 1'b0;
                     o_sda_release <= 1;
+                    if(mode_reg == W_3_PHASE || mode_reg == W_2_PHASE) begin
+                        shift_left_register <= sub_addr_reg;
+                    end
+                    // else if(mode_reg == R_2_PHASE) begin
+                    //     shift_left_register <= 
+                    // end
                 end
                 SEND_SUB_ADDR: begin
+                    if(cnt == CNT_SCL_CLK) begin
+                        o_sda_release <= (shift_left_register[7]) ? 1'b1 : 1'b0;
+                        shift_left_register <= shift_left_register << 1;
+                    end
+                    o_scl <= (scl_clk_rise_flag) ? 1'b1 : 1'b0;
+                    bit_sent_cnt <= bit_sent_cnt + 1;
                 end
                 RCV_RD_DATA: begin
+                    
+                end
+                BIT_9_PHASE2: begin
+                end
+                SEND_DATA: begin
+                    
+                end
+                BIT_9_PHASE3: begin
                 end
             endcase
         end
