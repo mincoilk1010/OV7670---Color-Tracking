@@ -26,12 +26,13 @@ module sccb_master
     output logic o_busy
 );
 
-    localparam int CNT_BUF = ((T_BUF * CLK_FREQ_KHZ)/1000000) - 1; 
-    localparam int CNT_START = ((T_STA * CLK_FREQ_KHZ)/1000000) - 1; 
-    localparam int CNT_STOP = ((T_STOP * CLK_FREQ_KHZ)/1000000) - 1; 
-    localparam int CNT_HALF_SCL_CLK = (CLK_FREQ_KHZ /(2*SCL_CLK_FREQ_KHZ)) - 1; 
-    localparam int CNT_HD_DAT = (T_HD_DAT * CLK_FREQ_KHZ)/1000000 - 1; 
-    localparam int CNT_SU_DAT = ((T_SU_DAT * CLK_FREQ_KHZ)/1000000) - 1; 
+    localparam int CNT_BUF = ((T_BUF * CLK_FREQ_KHZ)/1000000) - 1; //199
+    localparam int CNT_START = ((T_STA * CLK_FREQ_KHZ)/1000000) - 1; //99
+    localparam int CNT_STOP = ((T_STOP * CLK_FREQ_KHZ)/1000000) - 1; //99
+    localparam int CNT_HALF_SCL_CLK = (CLK_FREQ_KHZ /(2*SCL_CLK_FREQ_KHZ)) - 1; //249
+    localparam int CNT_SCL_CLK = (CNT_HALF_SCL_CLK + 1)*2 -1; //499
+    localparam int CNT_HD_DAT = (T_HD_DAT * CLK_FREQ_KHZ)/1000000 - 1; //99
+    localparam int CNT_SU_DAT = ((T_SU_DAT * CLK_FREQ_KHZ)/1000000) - 1; //19
 
 
     typedef enum logic [3:0] {
@@ -53,12 +54,15 @@ module sccb_master
     localparam R_2_PHASE = 2'd3;
 
     logic [15:0] cnt; //must be fix!!!!!
+    logic [2:0] bit_sent_cnt;
     state_t current_state, next_state;
     logic [1:0] mode_reg;
     logic [7:0] wdata_reg;
     logic [7:0] sub_addr_reg;
+    logic scl_clk_rise_flag;
 
     wire [7:0] slave_id_addr = (mode_reg == R_2_PHASE) ? {SLAVE_ADDR, 1'b1} : {SLAVE_ADDR, 1'b0};
+    logic [7:0] shift_left_register;
 
     //state register
     always_ff @(posedge clk or negedge arstn) begin
@@ -67,6 +71,7 @@ module sccb_master
             cnt <= 0;
             mode_reg <= NONE;
             wdata_reg <= 0;
+            scl_clk_rise_flag <= 0;
         end
         else begin
             //current_state <= next_state;
@@ -77,7 +82,15 @@ module sccb_master
                 sub_addr_reg <= i_sub_addr;
                 cnt <= 0;
             end
-            cnt <= cnt + 1;
+            if(cnt == CNT_HALF_SCL_CLK) begin
+                scl_clk_rise_flag <= ~scl_clk_rise_flag;
+            end
+            if(cnt == CNT_SCL_CLK) begin
+                cnt <= 0;
+            end
+            else begin
+                cnt <= cnt + 1;
+            end
         end
     end
 
@@ -95,12 +108,28 @@ module sccb_master
                 end
             end
             START: begin
-                if(cnt == CNT_START) begin
+                if(cnt == CNT_SCL_CLK) begin
                     next_state = SEND_ID_ADDR;
                 end
             end
             SEND_ID_ADDR: begin
-                
+                if(bit_sent_cnt == 3'd7) begin
+                    next_state = BIT_9;
+                end
+            end
+            BIT_9: begin
+                if(cnt == CNT_SCL_CLK) begin
+                    if(mode_reg == W_3_PHASE || mode_reg == W_2_PHASE) begin
+                        next_state = SEND_SUB_ADDR;
+                    end
+                    else if(mode_reg == R_2_PHASE) begin
+                        next_state = RCV_RD_DATA;
+                    end
+                end
+            end
+            SEND_SUB_ADDR: begin
+            end
+            RCV_RD_DATA: begin
             end
             default: next_state = IDLE;
         endcase
@@ -112,6 +141,7 @@ module sccb_master
             o_scl <= 1;
             o_sda_release <= 1;
             o_rdata <= 0;
+            bit_sent_cnt <= 0;
         end
         else begin
             case(next_state)
@@ -129,10 +159,24 @@ module sccb_master
                     o_sda_release <= 0;
                     if(cnt == CNT_START) begin
                         o_scl <= 0;
+                        shift_left_register <= slave_id_addr;
                     end
                 end
                 SEND_ID_ADDR: begin
-                    
+                    if(cnt == CNT_SCL_CLK) begin
+                        o_sda_release <= (shift_left_register[7]) ? 1'b1 : 1'b0;
+                        shift_left_register <= shift_left_register << 1;
+                    end
+                    o_scl <= (scl_clk_rise_flag) ? 1'b1 : 1'b0;
+                    bit_sent_cnt <= bit_sent_cnt + 1;
+                end
+                BIT_9: begin
+                    o_scl <= (scl_clk_rise_flag) ? 1'b1 : 1'b0;
+                    o_sda_release <= 1;
+                end
+                SEND_SUB_ADDR: begin
+                end
+                RCV_RD_DATA: begin
                 end
             endcase
         end
