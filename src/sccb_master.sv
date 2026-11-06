@@ -15,7 +15,7 @@ module sccb_master
     input wire clk, //100Mhz
     input wire arstn, 
  
-    input i_ida,
+    input i_sda,
     input logic [7:0] i_sub_addr,
     input logic [7:0] i_wdata,
     input logic [1:0] i_mode, //4 mode: 3 phase write data, 2 phase write data, 2 phase read data, do nothing
@@ -56,7 +56,7 @@ module sccb_master
     localparam R_2_PHASE = 2'd3;
 
     logic [15:0] cnt; //must be fix!!!!!
-    logic [2:0] bit_sent_cnt;
+    logic [2:0] bit_cnt;
     state_t current_state, next_state;
     logic [1:0] mode_reg;
     logic [7:0] wdata_reg;
@@ -83,6 +83,7 @@ module sccb_master
                 wdata_reg <= i_wdata;
                 sub_addr_reg <= i_sub_addr;
                 cnt <= 0;
+                bit_cnt <= 0;
             end
             if(cnt == CNT_HALF_SCL_CLK) begin
                 cnt <= cnt + 1;
@@ -117,7 +118,7 @@ module sccb_master
                 end
             end
             SEND_ID_ADDR: begin
-                if(bit_sent_cnt == 3'd7) begin
+                if(bit_cnt == 3'd7) begin
                     next_state = BIT_9_PHASE1;
                 end
             end
@@ -132,17 +133,38 @@ module sccb_master
                 end
             end
             SEND_SUB_ADDR: begin
-
+                if(bit_cnt == 3'd7) begin
+                    next_state = BIT_9_PHASE2;
+                end
             end
             RCV_RD_DATA: begin
-                
+                if(bit_cnt == 3'd7) begin
+                    next_state = BIT_9_PHASE2;
+                end
             end
             BIT_9_PHASE2: begin
+                if(cnt == CNT_SCL_CLK) begin
+                    if(mode_reg == W_3_PHASE) begin
+                        next_state = SEND_DATA;
+                    end
+                    else if(mode_reg == W_2_PHASE || mode_reg == R_2_PHASE) begin
+                        next_state = STOP_WAIT;
+                    end
+                end
             end
             SEND_DATA: begin
-                
+                if(bit_cnt == 3'd7) begin
+                    next_state = BIT_9_PHASE3;
+                end
             end
             BIT_9_PHASE3: begin
+                if(cnt == CNT_SCL_CLK) begin
+                    next_state = STOP_WAIT;
+                end
+            end
+            STOP_WAIT: begin
+            end
+            STOP: begin
             end
             default: next_state = IDLE;
         endcase
@@ -154,7 +176,7 @@ module sccb_master
             o_scl <= 1;
             o_sda_release <= 1;
             o_rdata <= 0;
-            bit_sent_cnt <= 0;
+            bit_cnt <= 0;
         end
         else begin
             case(next_state)
@@ -178,10 +200,10 @@ module sccb_master
                 SEND_ID_ADDR: begin
                     if(cnt == CNT_SCL_CLK) begin
                         o_sda_release <= (shift_left_register[7]) ? 1'b1 : 1'b0;
-                        shift_left_register <= shift_left_register << 1;
+                        shift_left_register <= {shift_left_register[6:0], 1'b0};
+                        bit_cnt <= bit_cnt + 1;
                     end
                     o_scl <= (scl_clk_rise_flag) ? 1'b1 : 1'b0;
-                    bit_sent_cnt <= bit_sent_cnt + 1;
                 end
                 BIT_9_PHASE1: begin
                     o_scl <= (scl_clk_rise_flag) ? 1'b1 : 1'b0;
@@ -189,27 +211,44 @@ module sccb_master
                     if(mode_reg == W_3_PHASE || mode_reg == W_2_PHASE) begin
                         shift_left_register <= sub_addr_reg;
                     end
-                    // else if(mode_reg == R_2_PHASE) begin
-                    //     shift_left_register <= 
-                    // end
                 end
                 SEND_SUB_ADDR: begin
                     if(cnt == CNT_SCL_CLK) begin
                         o_sda_release <= (shift_left_register[7]) ? 1'b1 : 1'b0;
-                        shift_left_register <= shift_left_register << 1;
+                        shift_left_register <= {shift_left_register[6:0], 1'b0};
+                        bit_cnt <= bit_cnt + 1;
                     end
                     o_scl <= (scl_clk_rise_flag) ? 1'b1 : 1'b0;
-                    bit_sent_cnt <= bit_sent_cnt + 1;
                 end
                 RCV_RD_DATA: begin
-                    
+                    if(cnt == CNT_HALF_SCL_CLK) begin
+                        o_rdata <= {o_rdata[6:0], i_sda};
+                        bit_cnt <= bit_cnt + 1;
+                    end
+                    o_scl <= (scl_clk_rise_flag) ? 1'b1 : 1'b0;
                 end
                 BIT_9_PHASE2: begin
+                    o_scl <= (scl_clk_rise_flag) ? 1'b1 : 1'b0;
+                    o_sda_release <= 1;
+                    if(mode_reg == W_3_PHASE) begin
+                        shift_left_register <= i_wdata;
+                    end
                 end
-                SEND_DATA: begin
-                    
+                SEND_DATA: begin //PHASE 3
+                    if(cnt == CNT_SCL_CLK) begin
+                        o_sda_release <= (shift_left_register[7]) ? 1'b1 : 1'b0;
+                        shift_left_register <= {shift_left_register[6:0], 1'b0};
+                        bit_cnt <= bit_cnt + 1;
+                    end
+                    o_scl <= (scl_clk_rise_flag) ? 1'b1 : 1'b0;
                 end
                 BIT_9_PHASE3: begin
+                    o_scl <= (scl_clk_rise_flag) ? 1'b1 : 1'b0;
+                    o_sda_release <= 1;
+                end
+                STOP_WAIT: begin
+                end
+                STOP: begin
                 end
             endcase
         end
