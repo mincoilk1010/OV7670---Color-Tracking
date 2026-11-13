@@ -1,0 +1,67 @@
+[*]
+[*] GTKWave Analyzer v3.3.126 (w)1999-2026 BSI
+[*] Fri Nov 13 10:51:01 2026
+[*]
+[dumpfile] "/home/minh-bui/Desktop/OV7670 - Color tracking/sccb_tb.vcd"
+[dumpfile_mtime] "Fri Nov 13 10:50:05 2026"
+[dumpfile_size] 15738983
+[savefile] "/home/minh-bui/Desktop/OV7670 - Color tracking/setup_sccb_tb.gtkw"
+[timestart] 0
+[size] 1920 992
+[pos] -1 -1
+*-28.878733 247880000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] sccb_master_tb.
+[sst_width] 273
+[signals_width] 267
+[sst_expanded] 1
+[sst_vpaned_height] 631
+@28
+sccb_master_tb.clk
+sccb_master_tb.arstn
+sccb_master_tb.DUT.i_start
+@c00028
+sccb_master_tb.i_mode[1:0]
+@28
+(0)sccb_master_tb.i_mode[1:0]
+(1)sccb_master_tb.i_mode[1:0]
+@1401200
+-group_end
+@28
+sccb_master_tb.DUT.mode_reg[1:0]
+@22
+[color] 7
+sccb_master_tb.DUT.slave_id_addr[7:0]
+sccb_master_tb.i_wdata[7:0]
+[color] 7
+sccb_master_tb.DUT.wdata_reg[7:0]
+sccb_master_tb.i_sub_addr[7:0]
+[color] 7
+sccb_master_tb.DUT.sub_addr_reg[7:0]
+@820
+[color] 3
+sccb_master_tb.state_name[127:0]
+@24
+sccb_master_tb.DUT.cnt[15:0]
+sccb_master_tb.DUT.bit_cnt[2:0]
+@28
+sccb_master_tb.DUT.shift_left_register[7:0]
+@420
+sccb_master_tb.rx_n
+@28
+sccb_master_tb.slave_sda_release
+sccb_master_tb.DUT.current_scl_clk_flag
+@29
+[color] 3
+sccb_master_tb.o_scl
+@28
+sccb_master_tb.DUT.o_sda_release
+[color] 3
+sccb_master_tb.sda_line
+[color] 5
+sccb_master_tb.o_busy
+@22
+sccb_master_tb.DUT.o_rdata[7:0]
+@420
+sccb_master_tb.errors
+[pattern_trace] 1
+[pattern_trace] 0
