@@ -35,7 +35,7 @@ always @(posedge clk or negedge arstn) begin
             20: o_dout <= 16'h18_02;  // HSTOP        stop high 8 bits //these kill the odd colored line
             21: o_dout <= 16'h32_80;  // HREF         edge offset
             22: o_dout <= 16'h19_03;  // VSTART       start high 8 bits
-            23: o_dout <= 16'h1A_7B;  // VSTOP        stop high 8 bits
+            23: o_dout <= 16'h1A_7B;  // z        stop high 8 bits
             24: o_dout <= 16'h03_0A;  // VREF         vsync edge offset
             25: o_dout <= 16'h0F_42;  // COM6         reset timings
             26: o_dout <= 16'h1E_00;  // MVFP         disable mirror / flip //might have magic value of 03

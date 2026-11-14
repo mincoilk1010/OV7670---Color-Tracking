@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 module cam_config 
 #(
-    parameter CLK_IN = 100_000_000
+    parameter CLK_IN_KHZ = 100_000
 )
 (
     input clk, 
@@ -26,7 +26,7 @@ module cam_config
         STOP
     } state_t;
 
-    localparam CNT_RESET_DELAY = (CLK_IN*10/1000) - 1; //10ms delay
+    localparam CNT_RESET_DELAY = (CLK_IN_KHZ*10000/1000) - 1; //10ms delay
     state_t current_state, next_state;
     logic [$clog2(CNT_RESET_DELAY + 1) - 1: 0] cnt;
     logic [15:0] rom_data_reg;
