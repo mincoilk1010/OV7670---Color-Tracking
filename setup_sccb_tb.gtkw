@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.126 (w)1999-2026 BSI
-[*] Fri Nov 13 10:51:01 2026
+[*] Fri Nov 13 14:50:04 2026
 [*]
 [dumpfile] "/home/minh-bui/Desktop/OV7670 - Color tracking/sccb_tb.vcd"
-[dumpfile_mtime] "Fri Nov 13 10:50:05 2026"
-[dumpfile_size] 15738983
+[dumpfile_mtime] "Fri Nov 13 14:48:47 2026"
+[dumpfile_size] 15741043
 [savefile] "/home/minh-bui/Desktop/OV7670 - Color tracking/setup_sccb_tb.gtkw"
-[timestart] 0
+[timestart] 313000000
 [size] 1920 992
 [pos] -1 -1
-*-28.878733 247880000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-28.878733 2364000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] sccb_master_tb.
 [sst_width] 273
 [signals_width] 267

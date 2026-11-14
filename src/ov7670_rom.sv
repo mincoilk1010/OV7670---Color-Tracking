@@ -12,10 +12,10 @@ always @(posedge clk or negedge arstn) begin
     end
     else begin
         case(i_addr) 
-            0:  o_dout <= 16'h12_80;  // COM7:        Reset SCCB registers
-            1:  o_dout <= 16'hFF_F0;  // Delay
+            0:  o_dout <= 16'h12_80;  // COM7:        Reset all OV7670 registers
+            1:  o_dout <= 16'hFF_F0;  // Delay (FAKE REG) for cam_config to set a delay
             2:  o_dout <= 16'h12_04;  // COM7,        Set RGB color output
-            3:  o_dout <= 16'h11_00;  // CLKRC        Internal PLL matches input clock (24 MHz). 
+            3:  o_dout <= 16'h11_00;  // CLKRC        Internal PLL matches input clock (24 MHz) -> PCLK = XCLK = 25 Mhz
             4:  o_dout <= 16'h0C_00;  // COM3,        *Leave as default.
             5:  o_dout <= 16'h3E_00;  // COM14,       *Leave as default. No scaling, normal pclock
             6:  o_dout <= 16'h04_00;  // COM1,        *Leave as default. Disable CCIR656
@@ -37,7 +37,7 @@ always @(posedge clk or negedge arstn) begin
             22: o_dout <= 16'h19_03;  // VSTART       start high 8 bits
             23: o_dout <= 16'h1A_7B;  // VSTOP        stop high 8 bits
             24: o_dout <= 16'h03_0A;  // VREF         vsync edge offset
-            25: o_dout <= 16'h0F_41;  // COM6         reset timings
+            25: o_dout <= 16'h0F_42;  // COM6         reset timings
             26: o_dout <= 16'h1E_00;  // MVFP         disable mirror / flip //might have magic value of 03
             27: o_dout <= 16'h33_0B;  // CHLF         magic value from the internet
             28: o_dout <= 16'h3C_78;  // COM12        no HREF when VSYNC low
